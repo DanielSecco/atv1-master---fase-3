@@ -9,7 +9,7 @@ require('../static/js/promise.js')
 require('../static/js/fetch.js')
 //require('../static/js/idb.js')
 //require('../static/js/utility.js')
-
+var dynamic = []; 
 Vue.config.productionTip = false
 var firebase = require('firebase');
 var $ = require('jquery')
@@ -112,6 +112,7 @@ var networkDataReceived = false;
 
 fetch(url)
     .then(function (res) {
+   
      console.log(res);
         return res.json();
     })
@@ -126,12 +127,19 @@ fetch(url)
         for (var key in data) {
             dataArray.push(data[key]);
             uio.push(data[key]);
+            dynamic.push(data[key].foto);
+            
+            
         }
+    
+    
         updateUI(dataArray);
         window.dados1 = uio;
+    
        // console.log(uio.length + '<???>' + jhg);
+    
 
-        return window.dados1, window.furlf;
+        return window.dados1, window.furlf, dynamic;
     }).catch(function (err) {
         console.log(err);
     });
@@ -179,6 +187,7 @@ if ('caches' in window) {
       }
     });
 }
+
 */
 
 
@@ -200,22 +209,42 @@ fetch('https://fotogeo-16a78.firebaseio.com/atest.json')
 
 
 
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.open('dynamic-content-v1').then(function(cache) {
-      // check if the requested URL is inside the dynamic-content-v1
-      return cache.match(event.request).then(function (response) {
-        // when found, respond with it.
-        // when not found: return it as it is after taking a clone
-        // and storing it, so next visit to the URL it will be there
-        return response || fetch(event.request).then(function(response) {
-          cache.put(event.request, response.clone());
-          return response;
-        });
-      });
-    })
-  );
-});
+function cacheAssets( dynamic ) {
+  return new Promise( function (resolve, reject) {
+    // open cache
+    caches.open('dynamic')
+      .then(cache => {
+        // the API does all the magic for us
+        cache.addAll(dynamic)
+          .then(() => {
+            console.log('all assets added to cache')
+            resolve()
+          })
+          .catch(err => {
+            console.log('error when syncing assets', err)
+            reject()
+          })
+      }).catch(err => {
+        console.log('error when opening cache', err)
+        reject()
+      })
+  });
+}
+
+// list of urls to be cached
+window.linksfire = dynamic;
+// cache responses of provided urls
+
+
+
+cacheAssets(window.linksfire)
+  .then(() => {
+      console.log('All assets cached', window.linksfire)
+  });
+
+
+
+
 
 
 
